@@ -20,5 +20,5 @@ type Manifest struct {
 type Part struct {
 	Hash     string `json:"hash"`
 	ID       string `json:"id"`
-	Filename string `json:"filename"`
+	Filename string `json:"filename,omitempty"`
 }

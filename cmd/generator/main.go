@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"flag"
 	"io"
 	"io/ioutil"
@@ -39,15 +40,16 @@ Content-Type: text/html; charset='utf-8'
 <html>
 <body>
 <p>This is an encrypted email, <a href="http://example.org/#id">
-open it here if you email client doesn't support it</a></p>
+open it here if you email client doesn't support PGP manifests
+</a></p>
 </body>
 </html>
 
 --{{.Boundary2}}
 Content-Type: text/plain; charset='utf-8'
 
-This is an encrypted email, open it here if your email doesn't
-support it:
+This is an encrypted email, open it here if your email client
+doesn't support PGP manifests:
 
 http://example.org/#id
 {{range .Attachments}}--{{$.Boundary1}}
@@ -89,6 +91,38 @@ var (
 	bodyPath        = flag.String("body-path", "", "Path to the file containing the body text")
 	attachmentPaths = flag.String("attachments", "", "Comma-seperated list of paths to attachments")
 )
+
+func encryptAndArmor(input []byte, to []*openpgp.Entity) ([]byte, error) {
+	encOutput := &bytes.Buffer{}
+	encInput, err := openpgp.Encrypt(encOutput, to, nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err = encInput.Write(input); err != nil {
+		return nil, err
+	}
+
+	if err = encInput.Close(); err != nil {
+		return nil, err
+	}
+
+	armOutput := &bytes.Buffer{}
+	armInput, err := armor.Encode(armOutput, "PGP MESSAGE", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err = io.Copy(armInput, encOutput); err != nil {
+		return nil, err
+	}
+
+	if err = armInput.Close(); err != nil {
+		return nil, err
+	}
+
+	return armOutput.Bytes(), nil
+}
 
 func main() {
 	// Parse the flags
@@ -139,39 +173,25 @@ func main() {
 	}
 
 	// Encrypt the body
-	bodyEncryptionOutput := &bytes.Buffer{}
-	bodyEncryptionInput, err := openpgp.Encrypt(bodyEncryptionOutput, []*openpgp.Entity{publicKey}, nil, nil, nil)
+	armoredBody, err := encryptAndArmor(body, []*openpgp.Entity{publicKey})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Write the body into the encrypting mechanism
-	if _, err = bodyEncryptionInput.Write(body); err != nil {
-		log.Fatal(err)
-	}
+	// Calculate the hashsum of the body
+	rawBodyHash := sha256.Sum256(body)
 
-	// Close the input
-	if err = bodyEncryptionInput.Close(); err != nil {
-		log.Fatal(err)
-	}
+	// Hex it
+	bodyHash := hex.EncodeToString(rawBodyHash[:])
 
-	// Armor the encrypted output
-	bodyArmoredOutput := &bytes.Buffer{}
-	bodyArmoredInput, err := armor.Encode(bodyArmoredOutput, "PGP MESSAGE", map[string]string{
-		"Version": "github.com/lavaboom/pgp-manifest-go/cmd/generator",
+	// Add body info to the parts
+	man.Parts = append(man.Parts, &manifest.Part{
+		ID:   "body",
+		Hash: bodyHash,
 	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, err = io.Copy(bodyArmoredInput, bodyEncryptionOutput); err != nil {
-		log.Fatal(err)
-	}
-	if err = bodyArmoredInput.Close(); err != nil {
-		log.Fatal(err)
-	}
 
 	// Put the body into the template input
-	input.Body = bodyArmoredOutput.String()
+	input.Body = string(armoredBody)
 
 	if *attachmentPaths != "" {
 		// Prepare the result attachments array
@@ -186,34 +206,9 @@ func main() {
 				log.Fatal(err)
 			}
 
-			// Create a new OpenPGP message
-			encryptedOutput := &bytes.Buffer{}
-			encryptedInput, err := openpgp.Encrypt(encryptedOutput, []*openpgp.Entity{publicKey}, nil, nil, nil)
+			// Encrypt the file
+			armoredFile, err := encryptAndArmor(file, []*openpgp.Entity{publicKey})
 			if err != nil {
-				log.Fatal(err)
-			}
-
-			// Copy the file into the encryption reader
-			if _, err = encryptedInput.Write(file); err != nil {
-				log.Fatal(err)
-			}
-
-			// Close the reader
-			if err = encryptedInput.Close(); err != nil {
-				log.Fatal(err)
-			}
-
-			armoredOutput := &bytes.Buffer{}
-			armoredInput, err := armor.Encode(armoredOutput, "PGP MESSAGE", map[string]string{
-				"Version": "github.com/lavaboom/pgp-manifest-go/cmd/generator",
-			})
-			if err != nil {
-				log.Fatal(err)
-			}
-			if _, err = io.Copy(armoredInput, encryptedOutput); err != nil {
-				log.Fatal(err)
-			}
-			if err = armoredInput.Close(); err != nil {
 				log.Fatal(err)
 			}
 
@@ -223,16 +218,19 @@ func main() {
 			// Put the result into the attachments slice
 			attachments = append(attachments, &templateAttachment{
 				ID:   id,
-				Body: armoredOutput.String(),
+				Body: string(armoredFile),
 			})
 
 			// Calculate the hashsum of the file
-			hash := sha256.Sum256(file)
+			rawHash := sha256.Sum256(file)
+
+			// Hex it
+			hash := hex.EncodeToString(rawHash[:])
 
 			// Put the attachment info into the manifest
 			man.Parts = append(man.Parts, &manifest.Part{
 				ID:       id,
-				Hash:     string(hash[:]),
+				Hash:     hash,
 				Filename: filepath.Base(part),
 			})
 		}
@@ -248,33 +246,8 @@ func main() {
 	}
 
 	// Encrypt the manifest
-	manifestEncryptedOutput := &bytes.Buffer{}
-	manifestEncryptedInput, err := openpgp.Encrypt(manifestEncryptedOutput, []*openpgp.Entity{publicKey}, nil, nil, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, err = manifestEncryptedInput.Write(encodedManifest); err != nil {
-		log.Fatal(err)
-	}
-	if err = manifestEncryptedInput.Close(); err != nil {
-		log.Fatal(err)
-	}
-
-	manifestArmoredOutput := &bytes.Buffer{}
-	manifestArmoredInput, err := armor.Encode(manifestArmoredOutput, "PGP MESSAGE", map[string]string{
-		"Version": "github.com/lavaboom/pgp-manifest-go/cmd/generator",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, err = io.Copy(manifestArmoredInput, manifestEncryptedOutput); err != nil {
-		log.Fatal(err)
-	}
-	if err = manifestArmoredInput.Close(); err != nil {
-		log.Fatal(err)
-	}
-
-	input.Manifest = manifestArmoredOutput.String()
+	encryptedManifest, err := encryptAndArmor(encodedManifest, []*openpgp.Entity{publicKey})
+	input.Manifest = string(encryptedManifest)
 
 	// Execute the template input
 	if err = tmpl.Execute(os.Stdout, input); err != nil {
