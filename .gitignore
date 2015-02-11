@@ -1,0 +1,3 @@
+*.exe
+cmd/generator/generator
+cmd/generator/_test_data
