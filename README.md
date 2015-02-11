@@ -42,4 +42,5 @@ multipart/mixed
      |- text/html                 - HTML containg a link to a remote email reader
      |- text/plain                - Plaintext variant of the fallback message
  |- application/pgp-encrypted; filename=randomstring1.pgp - PGP-encrypted attachment
+ |- application/x-pgp-manifest+json; filename=manifest.pgp - PGP-encrypted manifest
 ```
