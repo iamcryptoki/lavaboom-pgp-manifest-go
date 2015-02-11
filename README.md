@@ -7,7 +7,7 @@ emails, that act as areference implementation for the standard.
 
 ## Manifest's structure
 
-```json
+```js
 {
     "version": "v1.0.0", // Manifest's structure version
     "headers": { // Headers to override
