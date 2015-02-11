@@ -1,7 +1,7 @@
 # PGP manifest
 
 Implementation of the PGP manifest encrypted email structure based on
-(https://www.mailpile.is/blog/2014-11-21_To_PGP_MIME_Or_Not.html)[Mailpile's]
+[Mailpile's](https://www.mailpile.is/blog/2014-11-21_To_PGP_MIME_Or_Not.html)
 article. This project contains two CLI programs to generate and parse sample
 emails, that act as areference implementation for the standard.
 
