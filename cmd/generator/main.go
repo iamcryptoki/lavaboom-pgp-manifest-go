@@ -52,6 +52,7 @@ This is an encrypted email, open it here if your email client
 doesn't support PGP manifests:
 
 http://example.org/#id
+--{{.Boundary2}}--
 {{range .Attachments}}--{{$.Boundary1}}
 Content-Type: application/octet-stream
 Content-Disposition: attachment; filename="{{.ID}}.pgp"
@@ -63,6 +64,7 @@ Content-Type: application/x-pgp-manifest+json
 Content-Disposition: attachment; filename="manifest.pgp"
 
 {{.Manifest}}
+--{{.Boundary1}}--
 `
 
 type templateInput struct {
