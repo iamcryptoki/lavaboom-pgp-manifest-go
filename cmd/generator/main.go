@@ -34,7 +34,7 @@ Content-Type: application/pgp-encrypted
 
 {{.Body}}
 --{{.Boundary2}}
-Content-Type: text/html; charset='utf-8'
+Content-Type: text/html; charset="UTF-8"
 
 <!DOCTYPE html>
 <html>
@@ -46,7 +46,7 @@ open it here if you email client doesn't support PGP manifests
 </html>
 
 --{{.Boundary2}}
-Content-Type: text/plain; charset='utf-8'
+Content-Type: text/plain; charset="UTF-8"
 
 This is an encrypted email, open it here if your email client
 doesn't support PGP manifests:
