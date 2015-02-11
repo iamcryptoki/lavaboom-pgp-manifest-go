@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mime"
 	"os"
 	"path/filepath"
 	"strings"
@@ -231,9 +232,10 @@ func main() {
 
 			// Put the attachment info into the manifest
 			man.Parts = append(man.Parts, &manifest.Part{
-				ID:       id,
-				Hash:     hash,
-				Filename: filepath.Base(part),
+				ID:          id,
+				Hash:        hash,
+				Filename:    filepath.Base(part),
+				ContentType: mime.TypeByExtension(filepath.Ext(part)),
 			})
 		}
 

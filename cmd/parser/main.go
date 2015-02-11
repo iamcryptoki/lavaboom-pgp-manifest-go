@@ -360,6 +360,7 @@ func main() {
 
 			fmt.Printf("Attachment %s:\n", id)
 			fmt.Printf("\tFilename: %s\n", part.Filename)
+			fmt.Printf("\tContent type: %s\n", part.ContentType)
 			fmt.Print("\tBody:\n")
 			for _, line := range strings.Split(string(cleartext), "\n") {
 				fmt.Printf("\t\t%s\n", line)
