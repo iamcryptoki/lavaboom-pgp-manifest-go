@@ -236,6 +236,7 @@ func main() {
 				Hash:        hash,
 				Filename:    filepath.Base(part),
 				ContentType: mime.TypeByExtension(filepath.Ext(part)),
+				Size:        len(file),
 			})
 		}
 

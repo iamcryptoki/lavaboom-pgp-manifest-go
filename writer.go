@@ -5,6 +5,14 @@ import (
 	"strings"
 )
 
+func clearAddress(input string) string {
+	if input[0] == '<' {
+		return strings.Trim(input, "<>")
+	}
+
+	return input
+}
+
 func Write(input *Manifest) ([]byte, error) {
 	if input.Headers == nil {
 		input.Headers = map[string]string{}
@@ -14,16 +22,26 @@ func Write(input *Manifest) ([]byte, error) {
 		}
 	}
 
-	if input.From != "" {
-		input.Headers["from"] = input.From
+	if input.From != nil {
+		input.Headers["from"] = clearAddress(input.From.String())
 	}
 
-	if input.To != "" {
-		input.Headers["to"] = input.To
+	if input.To != nil {
+		to := []string{}
+		for _, addr := range input.To {
+			to = append(to, clearAddress(addr.String()))
+		}
+
+		input.Headers["to"] = strings.Join(to, ", ")
 	}
 
-	if input.CC != "" {
-		input.Headers["cc"] = input.CC
+	if input.CC != nil {
+		cc := []string{}
+		for _, addr := range input.CC {
+			cc = append(cc, clearAddress(addr.String()))
+		}
+
+		input.Headers["cc"] = strings.Join(cc, ", ")
 	}
 
 	if input.Subject != "" {

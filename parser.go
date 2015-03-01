@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"encoding/json"
+	"net/mail"
 )
 
 func Parse(input []byte) (*Manifest, error) {
@@ -15,13 +16,28 @@ func Parse(input []byte) (*Manifest, error) {
 
 	// Move the headers into the main manifest struct
 	if val, ok := manifest.Headers["from"]; ok {
-		manifest.From = val
+		from, err := mail.ParseAddress(val)
+		if err != nil {
+			return nil, err
+		}
+
+		manifest.From = from
 	}
 	if val, ok := manifest.Headers["to"]; ok {
-		manifest.To = val
+		to, err := mail.ParseAddressList(val)
+		if err != nil {
+			return nil, err
+		}
+
+		manifest.To = to
 	}
 	if val, ok := manifest.Headers["cc"]; ok {
-		manifest.CC = val
+		cc, err := mail.ParseAddressList(val)
+		if err != nil {
+			return nil, err
+		}
+
+		manifest.CC = cc
 	}
 	if val, ok := manifest.Headers["subject"]; ok {
 		manifest.Subject = val

@@ -2,24 +2,26 @@ package manifest
 
 import (
 	"github.com/blang/semver"
+	"net/mail"
 )
 
 type Manifest struct {
 	Version semver.Version `json:"version"`
 
-	From        string `json:"-"`
-	To          string `json:"-"`
-	CC          string `json:"-"`
-	Subject     string `json:"-"`
-	ContentType string `json:"-"`
+	From        *mail.Address   `json:"-"`
+	To          []*mail.Address `json:"-"`
+	CC          []*mail.Address `json:"-"`
+	Subject     string          `json:"-"`
+	ContentType string          `json:"-"`
 
 	Headers map[string]string `json:"headers"`
-	Parts   []*Part           `json:"part,omitempty"`
+	Parts   []*Part           `json:"parts,omitempty"`
 }
 
 type Part struct {
 	Hash        string `json:"hash"`
+	Size        int    `json:"size"`
 	ID          string `json:"id"`
-	ContentType string `json:"content-type"`
+	ContentType string `json:"content_type"`
 	Filename    string `json:"filename,omitempty"`
 }
