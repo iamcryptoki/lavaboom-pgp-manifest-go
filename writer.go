@@ -7,10 +7,10 @@ import (
 
 func clearAddress(input string) string {
 	if input[0] == '<' {
-		return strings.Trim(input, "<>")
+		return strings.Trim(input, "<> ")
 	}
 
-	return input
+	return strings.TrimSpace(input)
 }
 
 func Write(input *Manifest) ([]byte, error) {
@@ -23,13 +23,13 @@ func Write(input *Manifest) ([]byte, error) {
 	}
 
 	if input.From != nil {
-		input.Headers["from"] = clearAddress(input.From.String())
+		input.Headers["from"] = clearAddress(input.From.Name + " <" + input.From.Address + ">")
 	}
 
 	if input.To != nil {
 		to := []string{}
 		for _, addr := range input.To {
-			to = append(to, clearAddress(addr.String()))
+			to = append(to, clearAddress(addr.Name+" <"+addr.Address+">"))
 		}
 
 		input.Headers["to"] = strings.Join(to, ", ")
@@ -38,7 +38,7 @@ func Write(input *Manifest) ([]byte, error) {
 	if input.CC != nil {
 		cc := []string{}
 		for _, addr := range input.CC {
-			cc = append(cc, clearAddress(addr.String()))
+			cc = append(cc, clearAddress(addr.Name+" <"+addr.Address+">"))
 		}
 
 		input.Headers["cc"] = strings.Join(cc, ", ")
