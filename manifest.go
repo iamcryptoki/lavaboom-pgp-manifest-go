@@ -22,6 +22,6 @@ type Part struct {
 	Hash        string `json:"hash"`
 	Size        int    `json:"size"`
 	ID          string `json:"id"`
-	ContentType string `json:"content-type"`
+	ContentType string `json:"content_type"`
 	Filename    string `json:"filename,omitempty"`
 }
