@@ -16,34 +16,74 @@ func Parse(input []byte) (*Manifest, error) {
 
 	// Move the headers into the main manifest struct
 	if val, ok := manifest.Headers["from"]; ok {
-		from, err := mail.ParseAddress(val)
-		if err != nil {
-			return nil, err
-		}
+		if v2, ok := val.(string); ok {
+			from, err := mail.ParseAddress(v2)
+			if err != nil {
+				return nil, err
+			}
 
-		manifest.From = from
+			manifest.From = from
+		}
 	}
 	if val, ok := manifest.Headers["to"]; ok {
-		to, err := mail.ParseAddressList(val)
-		if err != nil {
-			return nil, err
-		}
+		if v2, ok := val.([]interface{}); ok {
+			to := []*mail.Address{}
 
-		manifest.To = to
+			for _, v3 := range v2 {
+				if v4, ok := v3.(string); ok {
+					v5, err := mail.ParseAddress(v4)
+					if err != nil {
+						return nil, err
+					}
+
+					to = append(to, v5)
+				}
+			}
+
+			manifest.To = to
+		} else if v2, ok := val.(string); ok {
+			to, err := mail.ParseAddressList(v2)
+			if err != nil {
+				return nil, err
+			}
+
+			manifest.To = to
+		}
 	}
 	if val, ok := manifest.Headers["cc"]; ok {
-		cc, err := mail.ParseAddressList(val)
-		if err != nil {
-			return nil, err
-		}
+		if v2, ok := val.([]interface{}); ok {
+			cc := []*mail.Address{}
 
-		manifest.CC = cc
+			for _, v3 := range v2 {
+				if v4, ok := v3.(string); ok {
+					v5, err := mail.ParseAddress(v4)
+					if err != nil {
+						return nil, err
+					}
+
+					cc = append(cc, v5)
+				}
+			}
+
+			manifest.CC = cc
+		} else if v2, ok := val.(string); ok {
+			cc, err := mail.ParseAddressList(v2)
+			if err != nil {
+				return nil, err
+			}
+
+			manifest.CC = cc
+		}
 	}
 	if val, ok := manifest.Headers["subject"]; ok {
-		manifest.Subject = val
+		if v2, ok := val.(string); ok {
+			manifest.Subject = v2
+		}
 	}
 	if val, ok := manifest.Headers["content-type"]; ok {
-		manifest.ContentType = val
+		if v2, ok := val.(string); ok {
+			manifest.ContentType = v2
+		}
 	}
 
 	return &manifest, nil
