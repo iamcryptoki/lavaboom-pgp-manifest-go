@@ -16,7 +16,7 @@ func Parse(input []byte) (*Manifest, error) {
 
 	// Move the headers into the main manifest struct
 	if val, ok := manifest.Headers["from"]; ok {
-		if v2, ok := val.(string); ok {
+		if v2, ok := val.(string); ok && v2 != "" {
 			from, err := mail.ParseAddress(v2)
 			if err != nil {
 				return nil, err
@@ -41,7 +41,7 @@ func Parse(input []byte) (*Manifest, error) {
 			}
 
 			manifest.To = to
-		} else if v2, ok := val.(string); ok {
+		} else if v2, ok := val.(string); ok && v2 != "" {
 			to, err := mail.ParseAddressList(v2)
 			if err != nil {
 				return nil, err
@@ -66,7 +66,7 @@ func Parse(input []byte) (*Manifest, error) {
 			}
 
 			manifest.CC = cc
-		} else if v2, ok := val.(string); ok {
+		} else if v2, ok := val.(string); ok && v2 != "" {
 			cc, err := mail.ParseAddressList(v2)
 			if err != nil {
 				return nil, err
