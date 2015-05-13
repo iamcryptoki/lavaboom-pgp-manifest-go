@@ -3,6 +3,7 @@ package manifest
 import (
 	"encoding/json"
 	"net/mail"
+	"strings"
 )
 
 func Parse(input []byte) (*Manifest, error) {
@@ -12,6 +13,12 @@ func Parse(input []byte) (*Manifest, error) {
 	// Decode the input
 	if err := json.Unmarshal(input, &manifest); err != nil {
 		return nil, err
+	}
+
+	// Transform headers
+	for key, value := range manifest.Headers {
+		delete(manifest.Headers, key)
+		manifest.Headers[strings.ToLower(key)] = value
 	}
 
 	// Move the headers into the main manifest struct
